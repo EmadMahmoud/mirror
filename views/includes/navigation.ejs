@@ -1,0 +1,46 @@
+<div class="container">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom border-body">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/" style="color: brown;">Mirror</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav col-md-12 row">
+                    <div class="col-md-4 nav__left">
+                        <% if(isAuthenticated) { %>
+                            <li class="nav-item">
+                                <a class="nav-link <%= path === '/profile' ? 'active' : '' %>"
+                                    href="/profile">Profile</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <%= path === '/add-thing' ? 'active' : '' %>" href="/add-thing">Add
+                                    Thing</a>
+                            </li>
+                            <% } %>
+
+                    </div>
+                    <div class="col-md-4 ms-auto nav__right">
+                        <% if (!isAuthenticated) { %>
+                            <li class="nav-item">
+                                <a class="nav-link <%= path === '/login' ? 'active' : '' %>" href="/login">Login</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link <%= path === '/signup' ? 'active' : '' %>" href="/signup">Signup</a>
+                                <% } else { %>
+                            <li class="nav-item">
+                                <form action="/logout" method="post">
+                                    <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                                    <button type="submit" class="nav__button">Logout</button>
+                                </form>
+                            </li>
+                            <% } %>
+
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+</div>

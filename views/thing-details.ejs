@@ -1,0 +1,33 @@
+<%- include('includes/head.ejs') %>
+    <%- include('includes/navigation.ejs') %>
+
+        <main>
+            <div class="container">
+                <div class="row justify-content-center text-center mt-5">
+                    <div class="card col-6" style="width: 18rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">
+                                <%= thing.name %>
+                            </h5>
+                            <!-- <h6 class="card-subtitle mb-2 text-body-secondary">Card subtitle</h6> -->
+                            <p class="card-text">
+                                <%= thing.comment %>
+                            </p>
+                            <div class="thing__details__buttons">
+                                <button class="btn btn-info">
+                                    <a href="/edit-thing/<%=thing._id%>?edit=true" class="card-link">Edit</a>
+                                </button>
+                                <form action="/delete-thing/<%= thing._id %>" method="post">
+                                    <input type="hidden" name="CSRFToken" value="<%= csrfToken %>">
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                            </div>
+
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+
+        <%- include('includes/end.ejs') %>
