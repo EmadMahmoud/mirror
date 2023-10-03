@@ -2,6 +2,9 @@ const User = require('../models/user');
 const Thing = require('../models/thing');
 const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
+const fs = require('fs');
+const path = require('path');
+const PDFDocument = require('pdfkit');
 
 exports.postAddThing = (req, res, next) => {
     const category = req.body.category;
@@ -61,13 +64,15 @@ exports.getThings = (req, res, next) => {
     req.user
         .populate('profile.things.thingId')
         .then(user => {
+            const userId = user._id;
             const things = user.profile.things;
             const categories = ['movies', 'tv-shows', 'books', 'songs'];
             res.render('profile', {
                 pageTitle: 'profile',
                 path: '/profile',
                 things: things,
-                categories: categories
+                categories: categories,
+                userId: userId
             });
         })
         .catch(err => {
@@ -168,4 +173,43 @@ exports.postEditThing = (req, res, next) => {
             error.httpStatusCode = 500;
             return next(error);
         })
+}
+
+exports.downloadProfile = (req, res, next) => {
+    const profileId = req.params.profileId;
+    User.findById(profileId).populate('profile.things.thingId')
+        .then(user => {
+            const email = user.email;
+            if (!user) {
+                return next(new Error('No User Found'))
+            }
+            if (user._id.toString() !== req.user._id.toString()) {
+                return next(new Error('Unauthorized'))
+            }
+            const fileName = `${profileId}.pdf`;
+            const filePath = path.join('data', 'profiles', fileName);
+            const file = fs.createReadStream(filePath);
+            const pdfDoc = new PDFDocument();
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+            // Add a page to the document
+            pdfDoc.pipe(fs.createWriteStream(filePath));
+            pdfDoc.pipe(res);
+            // Add some content to the page
+            pdfDoc.fontSize(26).text(`${email.split('@')[0]} profile`, {
+                underline: false
+            });
+            pdfDoc.text('-----------------------');
+            let totalThings = 0;
+            user.profile.things.forEach(thing => {
+                totalThings++;
+                pdfDoc.fontSize(14).text(`${totalThings}. ${thing.thingId.name} (${thing.thingId.category})`);
+                pdfDoc.fontSize(10).text(`${thing.thingId.comment}`);
+                pdfDoc.text('-----------------------');
+            });
+            pdfDoc.end();
+
+        })
+        .catch(err => next(err));
+
 }

@@ -50,3 +50,18 @@ div textarea.invalid,
 div select.invalid {
     border: 1px solid red;
 }
+
+div.download {
+    background-color: rgb(185, 209, 209);
+    padding: 0.5rem;
+    display: inline;
+    border-radius: 5%;
+}
+
+/* div.download:hover {
+    background-color: rgb(157, 179, 179);
+} */
+
+div a.download__link:hover {
+    text-decoration: underline;
+}

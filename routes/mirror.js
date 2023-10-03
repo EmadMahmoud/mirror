@@ -24,5 +24,6 @@ router.post('/edit-thing/:thingId',
     ],
     isAuth, mirrorController.postEditThing);
 
+router.get('/profile/:profileId', isAuth, mirrorController.downloadProfile)
 
 module.exports = router;
