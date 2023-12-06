@@ -46,6 +46,13 @@ router.post('/signup',
         })
     ],
     authController.postSignup);
+
+router.get('/confirm-email', authController.getConfirmEmail);
+router.post('/confirm-email',
+    [
+        body('confirmationCode', 'The code you entered is not correct!').isNumeric().isLength({ min: 7, max: 7 })
+    ],
+    authController.postConfirmEmail)
 router.get('/reset', authController.getReset);
 router.post('/reset',
     [

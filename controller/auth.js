@@ -58,7 +58,7 @@ exports.postLogin = async (req, res, next) => {
                 req.session.isLoggedIn = true;
                 req.session.user = user;
                 return req.session.save(err => { //use only when you wanna make sure that session is saved before redirect
-                    // console.log(err);
+                    // console.log(req.session);
                     res.redirect('/');
                 });
             };
@@ -72,7 +72,7 @@ exports.postLogin = async (req, res, next) => {
 
 };
 
-exports.postSignup = (req, res, next) => {
+exports.postSignup = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
     const errors = validationResult(req);
@@ -88,32 +88,81 @@ exports.postSignup = (req, res, next) => {
         });
     }
 
-    return bcrypt.hash(password, 12) //returns a promise
-        .then(hashedPassword => {
-            const user = new User({
-                email: email,
-                password: hashedPassword,
-                profile: {
-                    things: []
+    const confirmationCode = Math.floor(Math.random() * 9000000) + 1000000;
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const confirmUser = { email: email, password: hashedPassword, confirmationCode: confirmationCode }
+
+    try {
+        req.session.confirmUser = confirmUser;
+        req.session.save(err => {
+            if (err) {
+                console.log(`Error${err}`);
+            }
+        })
+
+        transporter.sendMail({
+            to: email,
+            from: SENDMAILUSER,
+            subject: 'Confirmation Code',
+            html: `<h1>You successfully signed up!</h1> <p>Your Confirmation Code is ${confirmationCode}`
+        })
+    } catch (err) {
+        const error = new Error(err);
+        error.httpStatusCode = 500;
+        return next(error);
+    }
+    res.redirect('/confirm-email');
+
+}
+
+exports.getConfirmEmail = (req, res, next) => {
+    res.render('auth/confirmation-code.ejs', {
+        pageTitle: 'Confirm Your Email',
+        path: '/confirm-email',
+        errorMessage: req.flash('error'),
+        validationErrors: []
+    })
+}
+
+exports.postConfirmEmail = (req, res, next) => {
+    const confirmationCode = req.body.confirmationCode;
+    const errors = validationResult(req);
+
+    if (!errors.isEmpty()) {
+        return res.status(422).render('auth/confirmation-code.ejs', {
+            path: '/confirm-email',
+            pageTitle: 'Confirm Your Email',
+            errorMessage: errors.array()[0].msg,
+            validationErrors: errors.array()
+        });
+    }
+
+    if (confirmationCode == req.session.confirmUser.confirmationCode) {
+        const user = new User({
+            email: req.session.confirmUser.email,
+            password: req.session.confirmUser.password,
+            profile: {
+                things: []
+            }
+        });
+        user.save()
+            .then(result => {
+                req.session.confirmUser = undefined;
+                if (result) {
+                    req.flash('error', 'You Signed Up Successfully, Please Login!');
+                    res.redirect('/login');
                 }
-            });
-            return user.save();
-        })
-        .then(result => {
-            transporter.sendMail({
-                to: email,
-                from: SENDMAILUSER,
-                subject: 'Welcome To The Family',
-                html: '<h1>You successfully signed up!</h1>'
             })
-                .catch(err => console.log(`Error sending mail: ${err}`));
-            res.redirect('/login');
-        })
-        .catch(err => {
-            const error = new Error(err);
-            error.httpStatusCode = 500;
-            return next(error);
-        })
+            .catch(err => {
+                const error = new Error(err);
+                error.httpStatusCode = 500;
+                return next(error);
+            })
+    } else {
+        req.flash('error', 'Wrong Confirmation Code!');
+        res.redirect('/confirm-email');
+    }
+
 }
 
 exports.postLogout = (req, res, next) => {
