@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs')
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const { validationResult } = require('express-validator');
-const { SENDMAILPASS, SENDMAILUSER } = require('../util/config');
+const { SENDMAILPASS, SENDMAILUSER } = process.env
 
 
 const transporter = nodemailer.createTransport({
@@ -197,7 +197,7 @@ exports.postReset = (req, res, next) => {
         });
     }
 
-    crypto.randomBytes(32, async (err, buffer) => { //this cretes a 32 randombytes and return err if any or the buffer
+    crypto.randomBytes(32, async (err, buffer) => { //this creates a 32 randombytes and return err if any or the buffer
         if (err) {
             console.log(err);
             req.flash('error', 'Error Occured, Please Try Again Later!');
