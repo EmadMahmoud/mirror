@@ -3,3 +3,4 @@ package-lock.json
 to-do.txt
 util
 data
+*.env
